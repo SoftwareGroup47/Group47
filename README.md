@@ -1,7 +1,28 @@
-# Group47
-The main repository of Group47
-GitHub ID: xsfq21-bot  QMID: 231221043
-GitHub ID: yangshengyu-ai   QMID: 231221504
-GitHub ID: heyulin-ai   QMID: 231220828
-GitHub ID: Michael-han903   QMID: 231221593
-GitHub ID: MingxuanLiu1229   QMID: 231220150
+# TA-side Servlet Module (Member 4)
+
+## 📌 Module Overview
+This module is responsible for the **backend business logic of TA (Teaching Assistant) users** in the Campus TA Recruitment System.
+It implements all core Servlet controllers for TA users, connecting frontend pages with the underlying data storage layer.
+
+## ✅ Core Functions
+1.  **User Registration (`RegisterServlet`)**
+    - Validates student ID uniqueness to prevent duplicate registration
+    - Creates new TA user objects and saves data to `users.json` via `FileDBHelper`
+    - Redirects to login page after successful registration
+
+2.  **User Login (`LoginServlet`)**
+    - Verifies TA user account and password
+    - Validates user identity (only TA role allowed to log in)
+    - Manages user session and redirects to TA profile page
+
+3.  **TA Profile Management (`TaProfileServlet`)**
+    - Handles TA profile information submission and update
+    - Updates user data in `users.json`
+    - Requires login authentication before operation
+
+4.  **Job Application (`ApplyJobServlet`)**
+    - Processes TA job application requests
+    - Records applicant information to corresponding job in `jobs.json`
+    - Validates job existence and user login status
+
+## 📁 File Structure
