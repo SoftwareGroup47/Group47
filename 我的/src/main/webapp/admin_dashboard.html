@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>管理员仪表盘 - BUPT TA Recruitment System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #2f3d4a; }
+        .container { width: min(800px, 96%); margin: 0 auto; padding: 40px 0; }
+        .dashboard-box { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(35, 70, 120, 0.1); }
+        h1 { margin: 0 0 24px; font-size: 1.8rem; color: #1a2a4f; text-align: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { margin: 0; }
+        .btn { padding: 8px 16px; background: #1c6ff1; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #144fc1; }
+        .workload-section { margin-bottom: 30px; }
+        .workload-section h2 { margin: 0 0 16px; font-size: 1.4rem; color: #1a2a4f; }
+        .ta-workload { padding: 16px; border-bottom: 1px solid #e6e9ed; }
+        .ta-workload:last-child { border-bottom: none; }
+        .ta-name { font-size: 1.1rem; font-weight: 600; color: #1a2a4f; margin: 0 0 8px; }
+        .workload-info { font-size: 0.9rem; color: #8a94a6; margin: 0 0 8px; }
+        .workload-stats { display: flex; gap: 20px; margin-top: 10px; }
+        .stat-item { padding: 10px; border-radius: 8px; }
+        .stat-label { font-size: 0.8rem; color: #6c757d; margin: 0 0 4px; }
+        .stat-value { font-size: 1.2rem; font-weight: 600; margin: 0; }
+        .workload-high { background: #fee2e2; border-left: 4px solid #ef4444; }
+        .workload-high .stat-value { color: #dc2626; }
+        .workload-medium { background: #fef3c7; border-left: 4px solid #f59e0b; }
+        .workload-medium .stat-value { color: #d97706; }
+        .workload-low { background: #d1fae5; border-left: 4px solid #10b981; }
+        .workload-low .stat-value { color: #059669; }
+        .workload-label { font-size: 0.8rem; font-weight: 600; margin-top: 5px; }
+        .workload-high-label { color: #dc2626; }
+        .workload-medium-label { color: #d97706; }
+        .workload-low-label { color: #059669; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>管理员仪表盘</h1>
+            <a href="index.html" class="btn">退出登录</a>
+        </div>
+        <div class="dashboard-box">
+            <div class="workload-section">
+                <h2>TA工作负荷</h2>
+                <div id="workloadList">
+                    <!-- TA工作负荷列表将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/storage.js"></script>
+    <script>
+        // 检查用户是否为管理员
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'Admin') {
+            window.location.href = 'admin_login.html';
+        }
+        
+        // 加载TA工作负荷
+        function loadTAWorkload() {
+            const users = Storage.get('users') || [];
+            const applications = Storage.get('applications') || [];
+            const workloadList = document.getElementById('workloadList');
+            
+            // 筛选TA用户
+            const taUsers = users.filter(user => user.role === 'TA');
+            
+            if (taUsers.length === 0) {
+                workloadList.innerHTML = '<p>暂无TA用户</p>';
+                return;
+            }
+            
+            let html = '';
+            taUsers.forEach(ta => {
+                // 计算TA的申请数量
+                const taApplications = applications.filter(app => 
+                    app.applicantName === ta.username && app.status === 'Approved'
+                );
+                
+                // 计算工作负荷等级
+                let workloadClass, workloadLabel, workloadLabelClass;
+                if (taApplications.length >= 3) {
+                    workloadClass = 'workload-high';
+                    workloadLabel = '高';
+                    workloadLabelClass = 'workload-high-label';
+                } else if (taApplications.length === 2) {
+                    workloadClass = 'workload-medium';
+                    workloadLabel = '中';
+                    workloadLabelClass = 'workload-medium-label';
+                } else {
+                    workloadClass = 'workload-low';
+                    workloadLabel = '低';
+                    workloadLabelClass = 'workload-low-label';
+                }
+                
+                html += `
+                    <div class="ta-workload">
+                        <h3 class="ta-name">${ta.username}</h3>
+                        <p class="workload-info">技能: ${ta.skills || '无'}</p>
+                        <p class="workload-info">成绩: ${ta.grades || '无'}</p>
+                        <div class="workload-stats">
+                            <div class="stat-item ${workloadClass}">
+                                <div class="stat-label">已批准申请</div>
+                                <div class="stat-value">${taApplications.length}</div>
+                                <div class="workload-label ${workloadLabelClass}">工作负荷: ${workloadLabel}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            workloadList.innerHTML = html;
+        }
+        
+        // 加载TA工作负荷
+        loadTAWorkload();
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>查看个人信息 - BUPT TA Recruitment System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #2f3d4a; }
+        .container { width: min(600px, 96%); margin: 0 auto; padding: 40px 0; }
+        .profile-box { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(35, 70, 120, 0.1); }
+        h1 { margin: 0 0 24px; font-size: 1.8rem; color: #1a2a4f; text-align: center; }
+        .profile-info { margin-bottom: 20px; }
+        .profile-label { font-weight: 600; color: #4f5f73; margin-bottom: 8px; }
+        .profile-value { margin-bottom: 16px; }
+        .btn { padding: 8px 16px; background: #1c6ff1; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #144fc1; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { margin: 0; }
+        .back-link { margin-top: 20px; text-align: center; }
+        .back-link a { color: #1c6ff1; text-decoration: none; font-weight: 600; }
+        .back-link a:hover { text-decoration: underline; }
+        .file-link { color: #1c6ff1; text-decoration: underline; }
+        .file-link:hover { color: #144fc1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>个人信息详情</h1>
+            <a href="mo_dashboard.html" class="btn">返回仪表盘</a>
+        </div>
+        <div class="profile-box">
+            <div id="profileContent">
+                <!-- 个人信息将通过JavaScript动态生成 -->
+            </div>
+            <div class="back-link">
+                <a href="mo_dashboard.html">返回仪表盘</a>
+            </div>
+        </div>
+    </div>
+    <script src="js/storage.js"></script>
+    <script src="js/fileUpload.js"></script>
+    <script>
+        // 检查用户是否登录且为MO角色
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'MO') {
+            window.location.href = 'login.html';
+        }
+        
+        // 获取URL参数中的用户名
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // 加载个人信息
+        function loadProfile() {
+            const username = getUrlParam('username');
+            if (!username) {
+                document.getElementById('profileContent').innerHTML = '<p>未找到用户信息</p>';
+                return;
+            }
+            
+            const user = Storage.findUserByUsername(username);
+            if (!user) {
+                document.getElementById('profileContent').innerHTML = '<p>未找到该用户的信息</p>';
+                return;
+            }
+            
+            let html = `
+                <div class="profile-info">
+                    <div class="profile-label">用户名</div>
+                    <div class="profile-value">${user.username}</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-label">角色</div>
+                    <div class="profile-value">${user.role === 'TA' ? '助教' : '课程负责人'}</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-label">技能</div>
+                    <div class="profile-value">${user.skills || '无'}</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-label">成绩</div>
+                    <div class="profile-value">${user.grades || '无'}</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-label">简历</div>
+                    <div class="profile-value">
+            `;
+            
+            if (user.cvFileId) {
+                const file = FileUpload.getFile(user.cvFileId);
+                if (file) {
+                    const fileUrl = FileUpload.getFileUrl(user.cvFileId);
+                    if (fileUrl) {
+                        html += `<a href="${fileUrl}" class="file-link" target="_blank">${file.name}</a>`;
+                    } else {
+                        html += file.name;
+                    }
+                } else {
+                    html += '无';
+                }
+            } else {
+                html += '无';
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('profileContent').innerHTML = html;
+        }
+        
+        // 加载个人信息
+        loadProfile();
+    </script>
+</body>
+</html>
