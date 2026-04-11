@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Register - BUPT TA Recruitment System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #2f3d4a; }
+        .container { width: min(400px, 96%); margin: 0 auto; padding: 40px 0; }
+        .register-box { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(35, 70, 120, 0.1); }
+        h1 { margin: 0 0 24px; font-size: 1.8rem; color: #1a2a4f; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #4f5f73; }
+        input, select { width: 100%; padding: 12px 16px; border: 1px solid #cbd3db; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: #1c6ff1; box-shadow: 0 0 0 3px rgba(28, 111, 241, 0.1); }
+        .btn { width: 100%; padding: 14px; background: #1c6ff1; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease; }
+        .btn:hover { background: #144fc1; }
+        .login-link { margin-top: 20px; text-align: center; color: #4f5f73; }
+        .login-link a { color: #1c6ff1; text-decoration: none; font-weight: 600; }
+        .login-link a:hover { text-decoration: underline; }
+        .error-message { color: #e74c3c; margin-top: 10px; text-align: center; }
+        .success-message { color: #27ae60; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-box">
+            <h1>注册</h1>
+            <form id="registerForm" action="register.html" method="get">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">角色</label>
+                    <select id="role" name="role" required>
+                        <option value="">请选择角色</option>
+                        <option value="TA">助教 (TA)</option>
+                        <option value="MO">课程负责人 (MO)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" id="agree" name="agree" required>
+                    <label for="agree" style="display: inline; font-weight: normal;">我同意 <a href="privacy.html" target="_blank">隐私政策</a> 和 <a href="ethics.html" target="_blank">伦理规范</a></label>
+                </div>
+                <button type="submit" class="btn">注册</button>
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+                <div class="login-link">
+                    已有账号？<a href="login.html">立即登录</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="js/storage.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            // 验证表单数据
+            if (!username || !password || !role) {
+                errorMessage.textContent = '请填写所有必填字段';
+                successMessage.textContent = '';
+                return;
+            }
+            
+            // 检查用户名是否已存在
+            const existingUser = Storage.findUserByUsername(username);
+            if (existingUser) {
+                errorMessage.textContent = '用户名已存在，请选择其他用户名';
+                successMessage.textContent = '';
+                return;
+            }
+            
+            // 加密密码
+            Storage.hashPassword(password).then(hashedPassword => {
+                // 创建新用户
+                const newUser = {
+                    username: username,
+                    password: hashedPassword,
+                    role: role
+                };
+                
+                // 保存用户
+                Storage.addUser(newUser);
+                
+                // 显示成功消息
+                errorMessage.textContent = '';
+                successMessage.textContent = '注册成功！请登录';
+                
+                // 3秒后跳转到登录页面
+                setTimeout(function() {
+                    window.location.href = 'login.html';
+                }, 3000);
+            }).catch(error => {
+                errorMessage.textContent = '密码加密失败，请重试';
+                successMessage.textContent = '';
+            });
+        });
+    </script>
+</body>
+</html>

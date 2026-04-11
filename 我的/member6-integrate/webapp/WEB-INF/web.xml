@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    
+    <!-- 用户认证相关 -->
+    <servlet>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>org.example.servlet.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RegisterServlet</servlet-name>
+        <url-pattern>/RegisterServlet</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>org.example.servlet.LoginServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/LoginServlet</url-pattern>
+    </servlet-mapping>
+    
+    <!-- MO端相关 -->
+    <servlet>
+        <servlet-name>MoPostJobServlet</servlet-name>
+        <servlet-class>org.example.servlet.MoPostJobServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MoPostJobServlet</servlet-name>
+        <url-pattern>/MoPostJobServlet</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>MoCheckApplyServlet</servlet-name>
+        <servlet-class>org.example.servlet.MoCheckApplyServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MoCheckApplyServlet</servlet-name>
+        <url-pattern>/MoCheckApplyServlet</url-pattern>
+    </servlet-mapping>
+    
+    <!-- TA端相关 -->
+    <servlet>
+        <servlet-name>TaProfileServlet</servlet-name>
+        <servlet-class>org.example.servlet.TaProfileServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TaProfileServlet</servlet-name>
+        <url-pattern>/TaProfileServlet</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>ApplyJobServlet</servlet-name>
+        <servlet-class>org.example.servlet.ApplyJobServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ApplyJobServlet</servlet-name>
+        <url-pattern>/ApplyJobServlet</url-pattern>
+    </servlet-mapping>
+    
+    <!-- 欢迎页面 -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+</web-app>

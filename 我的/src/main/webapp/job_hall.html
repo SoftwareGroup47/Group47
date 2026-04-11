@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Job Hall - BUPT TA Recruitment System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #2f3d4a; }
+        .container { width: min(800px, 96%); margin: 0 auto; padding: 40px 0; }
+        h1 { margin: 0 0 24px; font-size: 1.8rem; color: #1a2a4f; text-align: center; }
+        .job-list { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(35, 70, 120, 0.1); }
+        .job-item { padding: 16px; border-bottom: 1px solid #e6e9ed; }
+        .job-item:last-child { border-bottom: none; }
+        .job-title { font-size: 1.2rem; font-weight: 600; color: #1a2a4f; margin: 0 0 8px; }
+        .job-description { font-size: 1rem; color: #55606c; margin: 0 0 8px; }
+        .job-meta { font-size: 0.9rem; color: #8a94a6; margin: 0; }
+        .btn { padding: 8px 16px; background: #1c6ff1; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #144fc1; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { margin: 0; }
+        .btn-group { display: flex; gap: 10px; }
+        .application-status-section { margin-top: 30px; }
+        .status-item { padding: 16px; border-bottom: 1px solid #e6e9ed; }
+        .status-item:last-child { border-bottom: none; }
+        .status-title { font-size: 1.1rem; font-weight: 600; color: #1a2a4f; margin: 0 0 8px; }
+        .status-meta { font-size: 0.9rem; color: #8a94a6; margin: 0 0 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>岗位大厅</h1>
+            <div class="btn-group">
+                <a href="ta_profile.html" class="btn">个人资料</a>
+                <a href="index.html" class="btn">退出登录</a>
+            </div>
+        </div>
+        <div class="job-list" id="jobList">
+            <!-- 岗位列表将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="application-status-section">
+            <h2>我的申请状态</h2>
+            <div id="applicationStatusList">
+                <!-- 申请状态列表将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    <script src="js/storage.js"></script>
+    <script>
+        // 检查用户是否登录
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'TA') {
+            window.location.href = 'login.html';
+        }
+        
+        // 加载岗位列表
+        function loadJobs() {
+            const jobs = Storage.getJobs();
+            const jobList = document.getElementById('jobList');
+            
+            if (jobs.length === 0) {
+                jobList.innerHTML = '<p>暂无岗位</p>';
+                return;
+            }
+            
+            let html = '';
+            jobs.forEach(job => {
+                html += `
+                    <div class="job-item">
+                        <h2 class="job-title">${job.title}</h2>
+                        <p class="job-description">${job.description}</p>
+                        <p class="job-meta">发布者: ${job.publisher} | 状态: ${job.status}</p>
+                        <button class="btn apply-btn" data-job-id="${job.id}">申请岗位</button>
+                    </div>
+                `;
+            });
+            
+            jobList.innerHTML = html;
+            
+            // 添加申请按钮事件
+            document.querySelectorAll('.apply-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const jobId = this.getAttribute('data-job-id');
+                    applyJob(jobId);
+                });
+            });
+        }
+        
+        // 申请岗位
+        function applyJob(jobId) {
+            const jobs = Storage.getJobs();
+            const job = jobs.find(j => j.id === jobId);
+            
+            if (!job) {
+                alert('岗位不存在');
+                return;
+            }
+            
+            // 检查是否已经申请过该岗位
+            const applications = Storage.getApplications();
+            const existingApplication = applications.find(app => 
+                app.jobId === jobId && app.applicantName === currentUser.username
+            );
+            
+            if (existingApplication) {
+                alert('您已经申请过该岗位，请勿重复申请！');
+                return;
+            }
+            
+            // 创建申请
+            const application = {
+                id: Date.now().toString(),
+                jobId: jobId,
+                jobTitle: job.title,
+                applicantName: currentUser.username,
+                applicationDate: new Date().toLocaleString(),
+                status: 'Pending'
+            };
+            
+            // 保存申请
+            Storage.addApplication(application);
+            
+            // 显示成功消息
+            alert('申请成功！');
+        }
+        
+        // 加载岗位列表
+        loadJobs();
+        
+        // 加载申请状态
+        loadApplicationStatus();
+        
+        // 加载申请状态
+        function loadApplicationStatus() {
+            const applications = Storage.getApplications();
+            const myApplications = applications.filter(app => app.applicantName === currentUser.username);
+            const applicationStatusList = document.getElementById('applicationStatusList');
+            
+            if (myApplications.length === 0) {
+                applicationStatusList.innerHTML = '<p>暂无申请记录</p>';
+                return;
+            }
+            
+            let html = '';
+            myApplications.forEach(application => {
+                html += `
+                    <div class="status-item">
+                        <h3 class="status-title">${application.jobTitle}</h3>
+                        <p class="status-meta">申请时间: ${application.applicationDate}</p>
+                        <span class="application-status status-${application.status.toLowerCase()}">${application.status}</span>
+                    </div>
+                `;
+            });
+            
+            applicationStatusList.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

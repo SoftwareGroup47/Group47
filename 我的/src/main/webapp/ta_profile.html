@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>个人资料 - BUPT TA Recruitment System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #2f3d4a; }
+        .container { width: min(600px, 96%); margin: 0 auto; padding: 40px 0; }
+        .profile-box { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(35, 70, 120, 0.1); }
+        h1 { margin: 0 0 24px; font-size: 1.8rem; color: #1a2a4f; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #4f5f73; }
+        input, textarea { width: 100%; padding: 12px 16px; border: 1px solid #cbd3db; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
+        input:focus, textarea:focus { outline: none; border-color: #1c6ff1; box-shadow: 0 0 0 3px rgba(28, 111, 241, 0.1); }
+        textarea { resize: vertical; min-height: 100px; }
+        .btn { width: 100%; padding: 14px; background: #1c6ff1; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease; }
+        .btn:hover { background: #144fc1; }
+        .back-link { margin-top: 20px; text-align: center; }
+        .back-link a { color: #1c6ff1; text-decoration: none; font-weight: 600; }
+        .back-link a:hover { text-decoration: underline; }
+        .error-message { color: #e74c3c; margin-top: 10px; text-align: center; }
+        .success-message { color: #27ae60; margin-top: 10px; text-align: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { margin: 0; }
+        .file-upload { margin-bottom: 20px; }
+        .file-upload input[type="file"] { border: none; padding: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>个人资料</h1>
+            <a href="job_hall.html" class="btn">返回岗位大厅</a>
+        </div>
+        <div class="profile-box">
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="skills">技能</label>
+                    <textarea id="skills" name="skills" placeholder="请输入您的技能，多个技能用逗号分隔"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="grades">成绩</label>
+                    <input type="text" id="grades" name="grades" placeholder="请输入您的平均成绩">
+                </div>
+                <div class="form-group file-upload">
+                    <label for="cv">上传简历</label>
+                    <input type="file" id="cv" name="cv" accept=".pdf,.docx">
+                </div>
+                <button type="submit" class="btn">保存资料</button>
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+            </form>
+        </div>
+    </div>
+    <script src="js/storage.js"></script>
+    <script src="js/fileUpload.js"></script>
+    <script>
+        // 检查用户是否登录且为TA角色
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'TA') {
+            window.location.href = 'login.html';
+        }
+        
+        // 加载用户资料
+        function loadProfile() {
+            if (currentUser.skills) {
+                document.getElementById('skills').value = currentUser.skills;
+            }
+            if (currentUser.grades) {
+                document.getElementById('grades').value = currentUser.grades;
+            }
+            if (currentUser.cvFileId) {
+                // 显示已上传的简历链接，可点击打开
+                const cvInput = document.getElementById('cv');
+                const cvLabel = document.createElement('p');
+                const cvLink = document.createElement('a');
+                const file = FileUpload.getFile(currentUser.cvFileId);
+                const fileUrl = FileUpload.getFileUrl(currentUser.cvFileId);
+                if (file && fileUrl) {
+                    cvLink.href = fileUrl;
+                    cvLink.textContent = `已上传: ${file.name}`;
+                    cvLink.style.color = '#1c6ff1';
+                    cvLink.style.textDecoration = 'underline';
+                    cvLink.target = '_blank';
+                    cvLabel.appendChild(cvLink);
+                    cvInput.parentNode.appendChild(cvLabel);
+                }
+            }
+        }
+        
+        // 保存用户资料
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const skills = document.getElementById('skills').value;
+            const grades = document.getElementById('grades').value;
+            const cvInput = document.getElementById('cv');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            // 验证表单数据
+            if (!skills || !grades) {
+                errorMessage.textContent = '请填写所有必填字段';
+                successMessage.textContent = '';
+                return;
+            }
+            
+            // 处理文件上传
+            let cvFileId = currentUser.cvFileId || '';
+            if (cvInput.files.length > 0) {
+                const file = cvInput.files[0];
+                try {
+                    const uploadResult = await FileUpload.upload(file);
+                    if (uploadResult.success) {
+                        cvFileId = uploadResult.fileId;
+                    } else {
+                        errorMessage.textContent = uploadResult.message;
+                        successMessage.textContent = '';
+                        return;
+                    }
+                } catch (error) {
+                    errorMessage.textContent = error.message || '文件上传失败';
+                    successMessage.textContent = '';
+                    return;
+                }
+            }
+            
+            // 更新用户资料
+            const userData = {
+                skills: skills,
+                grades: grades,
+                cvFileId: cvFileId
+            };
+            
+            // 保存用户资料
+            const success = Storage.updateUser(currentUser.username, userData);
+            
+            if (success) {
+                // 更新本地存储中的当前用户信息
+                const updatedUser = { ...currentUser, ...userData };
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                
+                // 显示成功消息
+                errorMessage.textContent = '';
+                successMessage.textContent = '资料保存成功！';
+                
+                // 重新加载页面以显示更新后的信息
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // 显示错误消息
+                errorMessage.textContent = '资料保存失败，请重试';
+                successMessage.textContent = '';
+            }
+        });
+        
+        // 加载用户资料
+        loadProfile();
+    </script>
+</body>
+</html>
