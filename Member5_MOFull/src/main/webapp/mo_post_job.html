@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Job - BUPT TA Recruitment System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="header-title">Post Job</h1>
+            <a href="mo_dashboard.html" class="btn btn-secondary btn-small">Back to Dashboard</a>
+        </div>
+        
+        <div class="card">
+            <form id="postJobForm">
+                <div class="form-group">
+                    <label for="moduleCode">Module Code</label>
+                    <input type="text" id="moduleCode" name="moduleCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="title">Job Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Job Description</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="requirements">Skill Requirements</label>
+                    <input type="text" id="requirements" name="requirements" placeholder="Separate multiple skills with commas, e.g. Java, Python, Data Structures">
+                </div>
+                <div class="form-group">
+                    <label for="capacity">Capacity</label>
+                    <input type="number" id="capacity" name="capacity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="publisher">Publisher</label>
+                    <input type="text" id="publisher" name="publisher" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Post Job</button>
+                <div class="error-message message-box" id="errorMessage" style="display: none;"></div>
+                <div class="success-message message-box" id="successMessage" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="js/storage.js"></script>
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'MO') {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('postJobForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const moduleCode = document.getElementById('moduleCode').value;
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const requirements = document.getElementById('requirements').value;
+            const capacity = parseInt(document.getElementById('capacity').value);
+            const publisher = document.getElementById('publisher').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            if (!moduleCode || !title || !description || !capacity || !publisher) {
+                errorMessage.textContent = 'Please fill in all required fields.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            const newJob = {
+                id: Date.now().toString(),
+                moduleCode: moduleCode,
+                title: title,
+                description: description,
+                requirements: requirements || 'N/A',
+                capacity: capacity,
+                publisher: publisher,
+                status: 'Open'
+            };
+            
+            Storage.addJob(newJob);
+            
+            successMessage.textContent = 'Job posted successfully!';
+            successMessage.style.display = 'block';
+            
+            document.getElementById('postJobForm').reset();
+        });
+    </script>
+</body>
+</html>
