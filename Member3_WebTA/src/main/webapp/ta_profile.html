@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - BUPT TA Recruitment System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .workload-panel {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            color: #fff;
+        }
+
+        .workload-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .workload-header span {
+            font-size: 1.6rem;
+        }
+
+        .workload-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .workload-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .workload-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .workload-stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 6px 0 0;
+        }
+
+        .workload-advice {
+            background: rgba(255,255,255,0.15);
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+
+        .workload-advice.warning {
+            background: rgba(254, 215, 170, 0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+        }
+
+        .workload-advice strong {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="header-title">My Profile</h1>
+            <a href="job_hall.html" class="btn btn-secondary btn-small">Back to Job Hall</a>
+        </div>
+
+        <div class="workload-panel">
+            <div class="workload-header">
+                <span>📊</span> My Workload Analysis
+            </div>
+            <div class="workload-stats">
+                <div class="workload-stat">
+                    <div class="workload-stat-value" id="stat-workload">0</div>
+                    <div class="workload-stat-label">Total Applications</div>
+                </div>
+                <div class="workload-stat">
+                    <div class="workload-stat-value" id="stat-accepted">0</div>
+                    <div class="workload-stat-label">Approved</div>
+                </div>
+                <div class="workload-stat">
+                    <div class="workload-stat-value" id="stat-pending">0</div>
+                    <div class="workload-stat-label">Pending</div>
+                </div>
+            </div>
+            <div class="workload-advice" id="workload-advice">
+                💡 Workload is normal
+            </div>
+        </div>
+        
+        <div class="card">
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="skills">Skills</label>
+                    <textarea id="skills" name="skills" placeholder="Enter your skills, separated by commas"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="grades">Grades</label>
+                    <input type="text" id="grades" name="grades" placeholder="Enter your average grade">
+                </div>
+                <div class="form-group">
+                    <label for="cv">Upload CV</label>
+                    <div class="file-upload-wrapper">
+                        <label for="cv" class="file-upload-label">Choose File</label>
+                        <span class="file-upload-name" id="cvName">No file chosen</span>
+                        <input type="file" id="cv" name="cv" accept=".pdf,.docx" style="display: none;">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Profile</button>
+                <div class="error-message message-box" id="errorMessage" style="display: none;"></div>
+                <div class="success-message message-box" id="successMessage" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="js/storage.js"></script>
+    <script src="js/fileUpload.js"></script>
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'TA') {
+            window.location.href = 'login.html';
+        }
+
+        function loadWorkload() {
+            const applications = Storage.getApplications();
+            const myApplications = applications.filter(app => app.applicantName === currentUser.username);
+            const workload = myApplications.filter(app => app.status !== 'Rejected').length;
+            const accepted = myApplications.filter(app => app.status === 'Approved').length;
+            const pending = myApplications.filter(app => app.status === 'Pending').length;
+
+            document.getElementById('stat-workload').textContent = workload;
+            document.getElementById('stat-accepted').textContent = accepted;
+            document.getElementById('stat-pending').textContent = pending;
+
+            const adviceElement = document.getElementById('workload-advice');
+            let advice = '';
+            let isWarning = false;
+
+            if (accepted >= 2) {
+                advice = `💡 <strong>Warning:</strong> You have ${accepted} accepted position(s). Consider focusing on your current role(s).`;
+                isWarning = true;
+            } else if (workload >= 5) {
+                advice = `💡 <strong>Warning:</strong> You have applied for ${workload} position(s). Consider focusing on your studies.`;
+                isWarning = true;
+            } else if (workload >= 3) {
+                advice = `💡 <strong>Tip:</strong> You have applied for ${workload} position(s). Please manage your time wisely.`;
+                isWarning = true;
+            } else {
+                advice = '💡 Workload is normal';
+            }
+
+            adviceElement.innerHTML = advice;
+            adviceElement.className = isWarning ? 'workload-advice warning' : 'workload-advice';
+        }
+        
+        function loadProfile() {
+            if (currentUser.skills) {
+                document.getElementById('skills').value = currentUser.skills;
+            }
+            if (currentUser.grades) {
+                document.getElementById('grades').value = currentUser.grades;
+            }
+            if (currentUser.cvFileId) {
+                const cvInput = document.getElementById('cv');
+                const cvLabel = document.createElement('p');
+                const cvLink = document.createElement('a');
+                const file = FileUpload.getFile(currentUser.cvFileId);
+                const fileUrl = FileUpload.getFileUrl(currentUser.cvFileId);
+                if (file && fileUrl) {
+                    cvLink.href = fileUrl;
+                    cvLink.textContent = `Uploaded: ${file.name}`;
+                    cvLink.className = 'link';
+                    cvLink.target = '_blank';
+                    cvLabel.appendChild(cvLink);
+                    cvInput.parentNode.appendChild(cvLabel);
+                }
+            }
+        }
+        
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const skills = document.getElementById('skills').value;
+            const grades = document.getElementById('grades').value;
+            const cvInput = document.getElementById('cv');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            if (!skills || !grades) {
+                errorMessage.textContent = 'Please fill in all required fields.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            let cvFileId = currentUser.cvFileId || '';
+            if (cvInput.files.length > 0) {
+                const file = cvInput.files[0];
+                try {
+                    const uploadResult = await FileUpload.upload(file);
+                    if (uploadResult.success) {
+                        cvFileId = uploadResult.fileId;
+                    } else {
+                        errorMessage.textContent = uploadResult.message;
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                } catch (error) {
+                    errorMessage.textContent = error.message || 'File upload failed.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+            }
+            
+            const userData = {
+                skills: skills,
+                grades: grades,
+                cvFileId: cvFileId
+            };
+            
+            const success = Storage.updateUser(currentUser.username, userData);
+            
+            if (success) {
+                const updatedUser = { ...currentUser, ...userData };
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                
+                successMessage.textContent = 'Profile saved successfully!';
+                successMessage.style.display = 'block';
+                
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                errorMessage.textContent = 'Failed to save profile. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        });
+        
+        loadWorkload();
+        loadProfile();
+
+        // Update custom file upload label on selection
+        document.getElementById('cv').addEventListener('change', function() {
+            const nameSpan = document.getElementById('cvName');
+            nameSpan.textContent = this.files.length > 0 ? this.files[0].name : 'No file chosen';
+        });
+    </script>
+</body>
+</html>
