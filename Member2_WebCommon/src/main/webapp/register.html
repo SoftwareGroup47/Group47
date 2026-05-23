@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - BUPT TA Recruitment System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .page-header h1, .page-header p { color: #fff; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Create Account</h1>
+            <p class="page-subtitle">Join our TA recruitment system</p>
+        </div>
+        
+        <div class="card auth-card">
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="TA">Teaching Assistant (TA)</option>
+                        <option value="MO">Module Organiser (MO)</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="agree" name="agree" required>
+                    <label for="agree">I agree to the <a href="privacy.html" target="_blank" class="link">Privacy Policy</a> and <a href="ethics.html" target="_blank" class="link">Code of Ethics</a></label>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+                <div class="error-message message-box" id="errorMessage" style="display: none;"></div>
+                <div class="success-message message-box" id="successMessage" style="display: none;"></div>
+                <div class="auth-link">
+                    Already have an account? <a href="login.html">Log in now</a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="footer-links">
+            <a href="index.html">Back to Home</a>
+        </div>
+    </div>
+    
+    <script src="js/storage.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            if (!username || !password || !role) {
+                errorMessage.textContent = 'Please fill in all required fields.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            const existingUser = Storage.findUserByUsername(username);
+            if (existingUser) {
+                errorMessage.textContent = 'Username already exists. Please choose another.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            Storage.hashPassword(password).then(hashedPassword => {
+                const newUser = {
+                    username: username,
+                    password: hashedPassword,
+                    role: role
+                };
+                
+                Storage.addUser(newUser);
+                
+                successMessage.textContent = 'Registration successful! Redirecting to login page in 3 seconds...';
+                successMessage.style.display = 'block';
+                
+                setTimeout(function() {
+                    window.location.href = 'login.html';
+                }, 3000);
+            }).catch(error => {
+                errorMessage.textContent = 'Password encryption failed. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

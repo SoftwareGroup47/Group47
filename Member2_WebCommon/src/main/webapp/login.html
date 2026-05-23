@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BUPT TA Recruitment System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .page-header h1, .page-header p { color: #fff; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Welcome Back</h1>
+            <p class="page-subtitle">Please log in to your account</p>
+        </div>
+        
+        <div class="card auth-card">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                <div class="error-message message-box" id="errorMessage" style="display: none;"></div>
+                <div class="auth-link">
+                    Don't have an account? <a href="register.html">Register now</a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="footer-links">
+            <a href="index.html">Back to Home</a>
+        </div>
+    </div>
+    
+    <script src="js/storage.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.style.display = 'none';
+            
+            const user = Storage.findUserByUsername(username);
+            
+            if (!user) {
+                errorMessage.textContent = 'Username does not exist. Please register first.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            Storage.hashPassword(password).then(hashedPassword => {
+                if (user.password !== hashedPassword) {
+                    errorMessage.textContent = 'Incorrect password. Please try again.';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                if (user.role === 'MO') {
+                    window.location.href = 'mo_dashboard.html';
+                } else if (user.role === 'TA') {
+                    window.location.href = 'job_hall.html';
+                }
+            }).catch(error => {
+                errorMessage.textContent = 'Password verification failed. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
